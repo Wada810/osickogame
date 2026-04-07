@@ -104,26 +104,17 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
-
-      {/* Player 2 Area (Top) - CPU */}
-      <PlayerArea
-        player="p2"
-        hands={gameState.p2Hands}
-        currentPlayer={gameState.currentPlayer}
-        selectedHandIndex={gameState.currentPlayer === "p2" ? selectedHandIndex : null}
-        onHandClick={() => {}} // CPUなのでクリック無効化
-        isNPC={true}
-      />
-
       {/* Main Board Area */}
       <div className={styles.mainBoardArea}>
 
         {/* Game Over Overlay */}
         {gameOver && (
           <div className={styles.gameOverOverlay}>
-            <h2 className={styles.gameOverTitle}>
-              {winner ? `Player ${winner === "p1" ? "1" : "2"} Wins!` : "Game Over"}
-            </h2>
+            {winner === "p1" ? (
+              <h2 className={`${styles.gameOverTitle} ${styles.p1Win}`}>You Win!</h2>
+            ) : (
+              <h2 className={`${styles.gameOverTitle} ${styles.p2Win}`}>You Lose...</h2>
+            )}
             <button
               onClick={handleRestart}
               className={styles.restartButton}
@@ -148,13 +139,7 @@ export default function Home() {
           })}
         </div>
 
-        {/* Helper text */}
-        <div className={styles.helperText}>
-          {!gameOver && gameState.currentPlayer === "p2" && "CPU が考え中です..."}
-          {!gameOver && gameState.currentPlayer === "p1" && selectedHandIndex === null && "自分のカードを選択してください"}
-          {!gameOver && gameState.currentPlayer === "p1" && selectedHandIndex !== null && validPositionsForSelectedCount.size > 0 && "配置するマスを選んでください"}
-          {!gameOver && gameState.currentPlayer === "p1" && selectedHandIndex !== null && validPositionsForSelectedCount.size === 0 && "このカードは配置できる場所がありません"}
-        </div>
+
       </div>
 
       {/* Player 1 Area (Bottom) */}
@@ -164,6 +149,9 @@ export default function Home() {
         currentPlayer={gameState.currentPlayer}
         selectedHandIndex={gameState.currentPlayer === "p1" ? selectedHandIndex : null}
         onHandClick={(idx) => handleHandClick("p1", idx)}
+        gameOver={gameOver}
+        gameState={gameState}
+        validPositionsForSelectedCount={validPositionsForSelectedCount}
       />
     </div>
   );
@@ -228,14 +216,17 @@ interface PlayerAreaProps {
   selectedHandIndex: number | null;
   onHandClick: (idx: number) => void;
   isNPC?: boolean;
+  gameOver: boolean;
+  gameState: GameState;
+  validPositionsForSelectedCount: Set<number>;
 }
 
-function PlayerArea({ player, hands, currentPlayer, selectedHandIndex, onHandClick, isNPC = false }: PlayerAreaProps) {
+function PlayerArea({ player, hands, currentPlayer, selectedHandIndex, onHandClick, isNPC = false, gameOver, gameState, validPositionsForSelectedCount }: PlayerAreaProps) {
   const isMyTurn = player === currentPlayer;
   const isP1 = player === "p1";
 
   const headerAlignStyle = isP1 ? styles.playerHeaderP1 : styles.playerHeaderP2;
-  
+
   const nameActiveStyle = isP1 ? styles.playerNameP1Active : styles.playerNameP2Active;
   const nameStyle = isMyTurn ? nameActiveStyle : styles.playerNameInactive;
 
@@ -248,7 +239,12 @@ function PlayerArea({ player, hands, currentPlayer, selectedHandIndex, onHandCli
       {/* Player Header (Turn Indicator) */}
       <div className={headerAlignStyle}>
         <h3 className={`${styles.playerName} ${nameStyle}`}>
-          {isNPC ? "CPU" : `Player ${isP1 ? "1" : "2"}`}
+          <div className={`${gameState.currentPlayer === "p2" ? styles.npcThinking : ""}`}>
+            {!gameOver && gameState.currentPlayer === "p2" && "CPU が考え中です..."}
+            {!gameOver && gameState.currentPlayer === "p1" && selectedHandIndex === null && "自分のカードを選択してください"}
+            {!gameOver && gameState.currentPlayer === "p1" && selectedHandIndex !== null && validPositionsForSelectedCount.size > 0 && "配置するマスを選んでください"}
+            {!gameOver && gameState.currentPlayer === "p1" && selectedHandIndex !== null && validPositionsForSelectedCount.size === 0 && "このカードは配置できる場所がありません"}
+          </div>
         </h3>
 
         {/* Glow Line indicator built with a div */}
@@ -260,14 +256,14 @@ function PlayerArea({ player, hands, currentPlayer, selectedHandIndex, onHandCli
         {hands.map((card, idx) => {
           const isSelected = selectedHandIndex === idx;
           const isPlayableStr = isMyTurn; // Disable visually if not turn
-          
+
           let cardStyle = "";
           if (isSelected) {
             cardStyle = isP1 ? styles.handCardSelectedP1 : styles.handCardSelectedP2;
           } else {
             cardStyle = isP1 ? styles.handCardNormalP1 : styles.handCardNormalP2;
           }
-          
+
           const playabilityStyle = isPlayableStr ? styles.handCardPlayable : styles.handCardUnplayable;
 
           return (
@@ -277,9 +273,6 @@ function PlayerArea({ player, hands, currentPlayer, selectedHandIndex, onHandCli
               className={`${styles.handCard} ${playabilityStyle} ${cardStyle}`}
             >
               <img src={CARD_ICONS[card]} alt={card} className={styles.handCardIcon} />
-              <span className={styles.handCardName}>
-                {CARD_NAMES[card]}
-              </span>
 
               {/* Selection indicator dot */}
               {isSelected && (

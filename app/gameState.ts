@@ -99,8 +99,8 @@ export function applyMove(state: GameState, move: Move): GameState {
     // 1. 手札からカードを捨てる
     hand.splice(move.handIndex, 1);
 
-    // 2~3. 初期寿命を設定して駒を配置 (cleanerは3, 他は4)
-    const initialTtl = cardPlayed === "cleaner" ? 3 : 4;
+    // 2~3. 初期寿命を設定して駒を配置 (cleanerは5, blockは3, normalとbraveは4)
+    const initialTtl = cardPlayed === "cleaner" ? 5 : cardPlayed === "block" ? 3 : 4;
 
     const preBoard = [...state.board];
     const targetCell = preBoard[move.position];

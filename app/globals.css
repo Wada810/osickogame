@@ -7,6 +7,10 @@
  * in UA+ have the lowest specificty or the highest when using
  * !important.
  */
+body {
+  margin: 0;
+}
+
 @layer {
 
   /**
