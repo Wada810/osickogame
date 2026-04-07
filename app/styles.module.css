@@ -75,7 +75,7 @@
 .board {
     display: flex;
     gap: 2rem;
-    padding: 100px 200px 50px 200px;
+    padding: 7vw 10vw 3vw 10vw;
     background-color: rgba(217, 217, 217, 0.6);
     position: relative;
     z-index: 0;
