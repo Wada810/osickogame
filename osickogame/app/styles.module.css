@@ -1,0 +1,482 @@
+/* Container & Layout */
+.container {
+    min-height: 100vh;
+    /* Bathroom tiles style background */
+    background-color: #0f172a;
+    /* slate-900 */
+    background-image: linear-gradient(0deg, #1e293b 2px, transparent 2px),
+        linear-gradient(90deg, #1e293b 2px, transparent 2px);
+    background-size: 48px 48px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    font-family: sans-serif;
+    overflow: hidden;
+    user-select: none;
+}
+
+.container::selection {
+    background-color: rgba(20, 184, 166, 0.3);
+}
+
+.loadingContainer {
+    min-height: 100vh;
+    background-color: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    letter-spacing: 0.1em;
+}
+
+/* GameOver Overlay */
+.gameOverOverlay {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Board */
+.board {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding: 1rem;
+    background-color: rgba(24, 24, 27, 0.6);
+    backdrop-filter: blur(4px);
+    border-radius: 1rem;
+    border: 1px solid #27272a;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+    position: relative;
+    z-index: 0;
+}
+
+@media (min-width: 768px) {
+    .board {
+        grid-template-columns: repeat(9, minmax(0, 1fr));
+        padding: 1.5rem;
+    }
+
+    .container {
+        padding: 2rem;
+    }
+
+    .gameOverTitle {
+        font-size: 3.75rem;
+    }
+}
+
+.helperText {
+    margin-top: 2rem;
+    color: #94a3b8;
+    font-weight: 500;
+    letter-spacing: 0.025em;
+    height: 1.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Board Cells */
+.cellBase {
+    position: relative;
+    width: 100%;
+    /* min-height and aspect-ratio removed to let the potty image dictate height accurately */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    box-sizing: border-box;
+    /* overflow: hidden; removed so humans can pop out! */
+    z-index: 0;
+}
+
+.pottyBackground {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    position: relative;
+    z-index: 1;
+    /* Puddle will sit behind this at -1 */
+}
+
+/* Optional cell styles if needed, but transparent is cleaner since potty is the actual background */
+
+
+.cellUnitContent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    /* Align human to the bottom visually */
+    z-index: 10;
+}
+
+.cellUnitIcon {
+    width: 160%;
+    /* pop out size */
+    max-width: 160%;
+    max-height: 180%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
+    transform: translateY(25%);
+    /* slightly float to look natural */
+    pointer-events: none;
+}
+
+.ttlBadgeBase {
+    position: absolute;
+    bottom: -0.5rem;
+    right: -0.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    background-color: #09090b;
+    border-style: solid;
+    border-width: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 900;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    z-index: 15;
+}
+
+@media (min-width: 768px) {
+    .ttlBadgeBase {
+        width: 1.75rem;
+        height: 1.75rem;
+        font-size: 0.875rem;
+    }
+}
+
+.ttlBadgeP1 {
+    border-color: #3b82f6;
+    color: #dbeafe;
+}
+
+.ttlBadgeP2 {
+    border-color: #ef4444;
+    color: #fee2e2;
+}
+
+/* Puddle Overlay (isBlocked) */
+.puddleOverlay {
+    position: absolute;
+    bottom: -15%;
+    /* Hangs out at the bottom of the toilet */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 110%;
+    height: 40%;
+    background-color: rgba(234, 179, 8, 0.7);
+    /* yellow-500 semi-transparent */
+    border-radius: 50%;
+    /* blob shape */
+    box-shadow: inset 0 0 10px rgba(202, 138, 4, 0.4), 0 5px 15px rgba(0, 0, 0, 0.3);
+    filter: blur(1px);
+    z-index: -1;
+    /* Place UNDER the potty image! */
+    pointer-events: none;
+    animation: puddleWobble 4s ease-in-out infinite;
+}
+
+@keyframes puddleWobble {
+    0% {
+        transform: translateX(-50%) scale(1);
+    }
+
+    33% {
+        transform: translateX(-52%) scale(1.05);
+    }
+
+    66% {
+        transform: translateX(-48%) scale(0.95);
+    }
+
+    100% {
+        transform: translateX(-50%) scale(1);
+    }
+}
+
+.cellSelectable {
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.706);
+    border-color: transparent !important;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.cellSelectable:hover {
+    background-color: rgba(63, 63, 70, 0.8) !important;
+    transform: translateY(-0.25rem);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8) !important;
+}
+
+.cellSelectable:active {
+    transform: scale(0.95);
+}
+
+.cellNotSelectable {
+    cursor: default;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+    }
+
+    50% {
+        opacity: 0.8;
+        box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+    }
+}
+
+/* Player Area */
+.playerAreaBase {
+    width: 100%;
+    max-width: 42rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+}
+
+.playerHeaderP1 {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-direction: column-reverse;
+}
+
+.playerHeaderP2 {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-direction: column;
+}
+
+@media (min-width: 768px) {
+
+    .playerHeaderP1,
+    .playerHeaderP2 {
+        gap: 1rem;
+    }
+}
+
+.playerName {
+    font-size: 1.125rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: color 0.5s;
+}
+
+@media (min-width: 768px) {
+    .playerName {
+        font-size: 1.5rem;
+    }
+}
+
+.playerNameInactive {
+    color: #3f3f46;
+}
+
+.playerNameP1Active {
+    color: #60a5fa;
+    filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.6));
+}
+
+.playerNameP2Active {
+    color: #f87171;
+    filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.6));
+}
+
+.turnIndicator {
+    transition: all 0.7s ease-in-out;
+    height: 0.25rem;
+    border-radius: 9999px;
+}
+
+.turnIndicatorInactive {
+    width: 2rem;
+    background-color: #27272a;
+}
+
+.turnIndicatorP1Active {
+    width: 8rem;
+    background-color: #3b82f6;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 1);
+}
+
+.turnIndicatorP2Active {
+    width: 8rem;
+    background-color: #ef4444;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 1);
+}
+
+@media (min-width: 768px) {
+    .turnIndicatorInactive {
+        width: 4rem;
+    }
+
+    .turnIndicatorP1Active,
+    .turnIndicatorP2Active {
+        width: 16rem;
+    }
+}
+
+.handsContainer {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    transition: opacity 0.3s;
+}
+
+@media (min-width: 768px) {
+    .handsContainer {
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+}
+
+.handCard {
+    position: relative;
+    width: 5rem;
+    height: 8rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    border: 2px solid;
+    transition: all 0.3s;
+}
+
+@media (min-width: 768px) {
+    .handCard {
+        width: 7rem;
+        height: 10rem;
+    }
+}
+
+.handCardPlayable {
+    cursor: pointer;
+}
+
+.handCardPlayable:hover {
+    transform: translateY(-0.5rem);
+    background-color: #27272a;
+    border-color: #71717a;
+}
+
+.handCardUnplayable {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: contrast(0.75) brightness(0.75);
+}
+
+.handCardNormalP1 {
+    border-color: rgba(30, 58, 138, 0.3);
+    background-color: #18181b;
+}
+
+.handCardNormalP2 {
+    border-color: rgba(69, 10, 10, 0.3);
+    background-color: #18181b;
+}
+
+.handCardSelectedP1 {
+    border-color: #60a5fa !important;
+    background-color: rgba(23, 37, 84, 0.4) !important;
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+    transform: translateY(-1rem) scale(1.05);
+    z-index: 10;
+}
+
+.handCardSelectedP2 {
+    border-color: #f87171 !important;
+    background-color: rgba(69, 10, 10, 0.4) !important;
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+    transform: translateY(-1rem) scale(1.05);
+    z-index: 10;
+}
+
+@media (min-width: 768px) {
+
+    .handCardSelectedP1,
+    .handCardSelectedP2 {
+        transform: translateY(-1.5rem) scale(1.05) !important;
+    }
+}
+
+.handCardIcon {
+    font-size: 2.25rem;
+    margin-bottom: 0.75rem;
+    filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.07));
+    transition: transform 0.2s;
+}
+
+.handCardPlayable:hover .handCardIcon {
+    transform: scale(1.1);
+}
+
+@media (min-width: 768px) {
+    .handCardIcon {
+        font-size: 3rem;
+    }
+}
+
+.handCardName {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: #a1a1aa;
+    text-transform: uppercase;
+}
+
+@media (min-width: 768px) {
+    .handCardName {
+        font-size: 0.875rem;
+    }
+}
+
+.selectionDotBase {
+    position: absolute;
+    top: -0.5rem;
+    right: -0.5rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    border: 2px solid #18181b;
+}
+
+.selectionDotP1 {
+    background-color: #60a5fa;
+}
+
+.selectionDotP2 {
+    background-color: #f87171;
+}
