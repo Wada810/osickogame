@@ -13,6 +13,7 @@ import {
   Cell
 } from "./gameState";
 import styles from './styles.module.css';
+import { useAudio } from './hooks/useAudio';
 
 const CARD_ICONS: Record<CardType, string> = {
   normal: "/normal.png",
@@ -31,6 +32,9 @@ const CARD_NAMES: Record<CardType, string> = {
 export default function Home() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [selectedHandIndex, setSelectedHandIndex] = useState<number | null>(null);
+  const [appScreen, setAppScreen] = useState<"title" | "play">("title");
+
+  const { bgmVolume, setBgmVolume, seVolume, setSeVolume, startBGM, playSE } = useAudio();
 
   // Hydrationエラー防止のため、ランダムにカードを引く初期化処理はクライアントサイドでのみ実行
   React.useEffect(() => {
@@ -39,6 +43,7 @@ export default function Home() {
 
   // --- CPU (NPC) Logic ---
   React.useEffect(() => {
+    if (appScreen !== "play") return;
     if (!gameState) return;
     if (isGameOver(gameState)) return;
 
@@ -52,12 +57,13 @@ export default function Home() {
           const newGameState = applyMove(gameState, randomMove);
           setGameState(newGameState);
           setSelectedHandIndex(null); // 安全のため選択をリセット
+          playSE("select");
         }
       }, 1000); // 1秒間CPUが「考える」時間を演出する
 
       return () => clearTimeout(timeout);
     }
-  }, [gameState]);
+  }, [gameState, appScreen, playSE]);
 
   if (!gameState) {
     return <div className={styles.loadingContainer}>LOADING...</div>;
@@ -83,6 +89,7 @@ export default function Home() {
       setSelectedHandIndex(null); // 選択解除
     } else {
       setSelectedHandIndex(index);
+      playSE("click");
     }
   };
 
@@ -95,12 +102,48 @@ export default function Home() {
     const newGameState = applyMove(gameState, { handIndex: selectedHandIndex, position });
     setGameState(newGameState);
     setSelectedHandIndex(null); // 選択状態をリセット
+    playSE("select");
   };
 
   const handleRestart = () => {
     setGameState(createInitialState());
     setSelectedHandIndex(null);
   };
+
+  if (appScreen === "title") {
+    return (
+      <div className={styles.container}>
+        <div className={styles.startScreen}>
+          <h1 className={styles.gameTitle}>OSICKO GAME</h1>
+          
+          <div className={styles.volumeControls}>
+             <label className={styles.volumeLabel}>
+                BGM Volume: {Math.round(bgmVolume * 100)}%
+                <input type="range" min="0" max="1" step="0.05" value={bgmVolume} onChange={(e) => setBgmVolume(Number(e.target.value))} />
+             </label>
+             <label className={styles.volumeLabel}>
+                SE Volume: {Math.round(seVolume * 100)}%
+                <input type="range" min="0" max="1" step="0.05" value={seVolume} onChange={(e) => {
+                    setSeVolume(Number(e.target.value));
+                    playSE("click");
+                }} />
+             </label>
+          </div>
+
+          <button 
+             className={styles.startButton} 
+             onClick={() => {
+                playSE("click");
+                startBGM();
+                setAppScreen("play");
+             }}
+          >
+            GAME START
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
