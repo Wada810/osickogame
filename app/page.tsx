@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import styles from './styles.module.css';
 import { useAudio } from './hooks/useAudio';
@@ -8,6 +8,18 @@ import { useAudio } from './hooks/useAudio';
 export default function Home() {
   const router = useRouter();
   const { bgmVolume, setBgmVolume, seVolume, setSeVolume, startBGM, playSE } = useAudio();
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("osicko_username");
+    if (saved) setUsername(saved);
+  }, []);
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setUsername(val);
+    localStorage.setItem("osicko_username", val);
+  };
 
   return (
     <div className={styles.container}>
@@ -25,6 +37,19 @@ export default function Home() {
                   setSeVolume(Number(e.target.value));
                   playSE("click");
               }} />
+           </label>
+        </div>
+
+        <div className={styles.volumeControls}>
+           <label className={styles.volumeLabel}>
+              Player Name
+              <input 
+                 type="text" 
+                 value={username} 
+                 onChange={handleNameChange} 
+                 placeholder="名前を入力..." 
+                 className={styles.nameInput}
+              />
            </label>
         </div>
 

@@ -12,6 +12,7 @@ export function useFirebaseMatch() {
   const [playerRole, setPlayerRole] = useState<"p1" | "p2" | null>(null);
   const [remoteGameState, setRemoteGameState] = useState<GameState | null>(null);
   const [matchStatus, setMatchStatus] = useState<"searching" | "waiting" | "playing">("searching");
+  const [playersInfo, setPlayersInfo] = useState({ p1: "Player 1", p2: "Player 2" });
 
   // 1. 匿名認証
   useEffect(() => {
@@ -32,6 +33,9 @@ export function useFirebaseMatch() {
     const findMatch = async () => {
       if (!isMounted) return;
       setMatchStatus("searching");
+
+      const username = localStorage.getItem("osicko_username") || "Guest";
+
       const roomsRef = collection(db, "rooms");
       const q = query(roomsRef, where("status", "==", "waiting"));
       const snapshot = await getDocs(q);
@@ -45,6 +49,7 @@ export function useFirebaseMatch() {
         await updateDoc(doc(db, "rooms", roomDoc.id), {
           status: "playing",
           player2Id: uid,
+          player2Name: username,
           updatedAt: serverTimestamp()
         });
         setMatchStatus("playing");
@@ -54,7 +59,9 @@ export function useFirebaseMatch() {
         const docRef = await addDoc(roomsRef, {
           status: "waiting",
           player1Id: uid,
+          player1Name: username,
           player2Id: null,
+          player2Name: null,
           gameStateStr: JSON.stringify(createInitialState()),
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
@@ -80,6 +87,11 @@ export function useFirebaseMatch() {
         if (data.status === "waiting") {
              setMatchStatus("waiting");
         }
+
+        setPlayersInfo({
+          p1: data.player1Name || "Player 1",
+          p2: data.player2Name || "Player 2"
+        });
 
         if (data.gameStateStr) {
           try {
@@ -111,5 +123,5 @@ export function useFirebaseMatch() {
     });
   }
 
-  return { uid, roomId, playerRole, matchStatus, remoteGameState, syncGameState, restartMatch };
+  return { uid, roomId, playerRole, matchStatus, remoteGameState, syncGameState, restartMatch, playersInfo };
 }

@@ -26,7 +26,7 @@ const CARD_ICONS: Record<CardType, string> = {
 export default function OnlineGame() {
   const router = useRouter();
   const { playSE } = useAudio();
-  const { uid, playerRole, matchStatus, remoteGameState, syncGameState, restartMatch } = useFirebaseMatch();
+  const { uid, playerRole, matchStatus, remoteGameState, syncGameState, restartMatch, playersInfo } = useFirebaseMatch();
   
   const [selectedHandIndex, setSelectedHandIndex] = useState<number | null>(null);
 
@@ -89,6 +89,9 @@ export default function OnlineGame() {
   const opponentRole = playerRole === "p1" ? "p2" : "p1";
   const opponentHands = opponentRole === "p1" ? gameState.p1Hands : gameState.p2Hands;
   const myHands = playerRole === "p1" ? gameState.p1Hands : gameState.p2Hands;
+  
+  const myName = playerRole === "p1" ? playersInfo.p1 : playersInfo.p2;
+  const opponentName = opponentRole === "p1" ? playersInfo.p1 : playersInfo.p2;
 
   return (
     <div className={styles.container}>
@@ -107,6 +110,7 @@ export default function OnlineGame() {
         onHandClick={() => {}}
         gameOver={gameOver}
         myRole={playerRole}
+        playerName={opponentName}
       />
 
       <div className={styles.mainBoardArea}>
@@ -149,6 +153,7 @@ export default function OnlineGame() {
         onHandClick={(idx) => handleHandClick(playerRole, idx)}
         gameOver={gameOver}
         myRole={playerRole}
+        playerName={myName}
       />
     </div>
   );
@@ -209,9 +214,10 @@ interface PlayerAreaProps {
   onHandClick: (idx: number) => void;
   gameOver: boolean;
   myRole: string;
+  playerName?: string;
 }
 
-function PlayerArea({ player, hands, currentPlayer, selectedHandIndex, onHandClick, gameOver, myRole }: PlayerAreaProps) {
+function PlayerArea({ player, hands, currentPlayer, selectedHandIndex, onHandClick, gameOver, myRole, playerName }: PlayerAreaProps) {
   const isMyTurn = player === currentPlayer;
   const isP1 = player === "p1";
   const isLocalPlayer = player === myRole;
@@ -226,8 +232,9 @@ function PlayerArea({ player, hands, currentPlayer, selectedHandIndex, onHandCli
     <div className={styles.playerAreaBase}>
       <div className={headerAlignStyle}>
         <h3 className={`${styles.playerName} ${nameStyle}`}>
-          <div className={`${!isLocalPlayer ? styles.npcThinking : ""}`}>
-            {!gameOver && isMyTurn && !isLocalPlayer && "対戦相手が考え中です..."}
+          {playerName || `Player ${isP1 ? "1" : "2"}`}
+          <div className={`${!isLocalPlayer ? styles.npcThinking : ""}`} style={{ fontSize: "0.8rem", marginTop: "0.5rem" }}>
+            {!gameOver && isMyTurn && !isLocalPlayer && "考え中です..."}
             {!gameOver && isMyTurn && isLocalPlayer && selectedHandIndex === null && "自分のカードを選択してください"}
             {!gameOver && isMyTurn && isLocalPlayer && selectedHandIndex !== null && "配置するマスを選んでください"}
           </div>
